@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 """
-bot.py - Phenny IRC Bot
-Copyright 2008, Sean B. Palmer, inamidst.com
+bot.py - jenni IRC Bot
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
-import sys, os, re, threading, imp
+
+import time, sys, os, re, threading, imp
 import irc
 
-home = os.path.abspath(os.path.dirname(__file__))
+home = os.getcwd()
 
 def decode(bytes):
     try: text = bytes.decode('utf-8')
@@ -21,11 +25,18 @@ def decode(bytes):
 
 class Jenni(irc.Bot):
     def __init__(self, config):
-        args = (config.nick, config.name, config.channels, config.password)
+        if hasattr(config, "logchan_pm"): lc_pm = config.logchan_pm
+        else: lc_pm = None
+        if hasattr(config, "logging"): logging = config.logging
+        else: logging = False
+        args = (config.nick, config.name, config.channels, config.password, lc_pm, logging)
         irc.Bot.__init__(self, *args)
         self.config = config
         self.doc = {}
         self.stats = {}
+        self.times = {}
+        if hasattr(config, 'excludes'):
+            self.excludes = config.excludes
         self.setup()
 
     def setup(self):
@@ -39,7 +50,6 @@ class Jenni(irc.Bot):
         else:
             for fn in self.config.enable:
                 filenames.append(os.path.join(home, 'modules', fn + '.py'))
-        # @@ exclude
 
         if hasattr(self.config, 'extra'):
             for fn in self.config.extra:
@@ -51,8 +61,12 @@ class Jenni(irc.Bot):
                             filenames.append(os.path.join(fn, n))
 
         modules = []
+        excluded_modules = getattr(self.config, 'exclude', [])
         for filename in filenames:
             name = os.path.basename(filename)[:-3]
+            if name in excluded_modules: continue
+            # if name in sys.modules:
+            #     del sys.modules[name]
             try: module = imp.load_source(name, filename)
             except Exception, e:
                 print >> sys.stderr, "Error loading %s: %s (in bot.py)" % (name, e)
@@ -92,8 +106,8 @@ class Jenni(irc.Bot):
 
         def sub(pattern, self=self):
             # These replacements have significant order
-            pattern = pattern.replace('$nickname', self.nick)
-            return pattern.replace('$nick', r'%s[,:] +' % self.nick)
+            pattern = pattern.replace('$nickname', re.escape(self.nick))
+            return pattern.replace('$nick', r'%s[,:] +' % re.escape(self.nick))
 
         for name, func in self.variables.iteritems():
             # print name, func
@@ -106,6 +120,12 @@ class Jenni(irc.Bot):
             if not hasattr(func, 'event'):
                 func.event = 'PRIVMSG'
             else: func.event = func.event.upper()
+
+            if not hasattr(func, 'rate'):
+                if hasattr(func, 'commands'):
+                    func.rate = 5
+                else:
+                    func.rate = 0
 
             if hasattr(func, 'rule'):
                 if isinstance(func.rule, str):
@@ -175,12 +195,48 @@ class Jenni(irc.Bot):
                 s.groups = match.groups
                 s.args = args
                 s.admin = origin.nick in self.config.admins
-                s.owner = origin.nick == self.config.owner
+                if s.admin == False:
+                    for each_admin in self.config.admins:
+                        re_admin = re.compile(each_admin)
+                        if re_admin.findall(origin.host):
+                            s.admin = True
+                        elif '@' in each_admin:
+                            temp = each_admin.split('@')
+                            re_host = re.compile(temp[1])
+                            if re_host.findall(origin.host):
+                                s.admin = True
+                s.owner = origin.nick + '@' + origin.host == self.config.owner
+                if s.owner == False: s.owner = origin.nick == self.config.owner
+                s.host = origin.host
                 return s
 
         return CommandInput(text, origin, bytes, match, event, args)
 
     def call(self, func, origin, jenni, input):
+        nick = (input.nick).lower()
+        if nick in self.times:
+            if func in self.times[nick]:
+                if not input.admin:
+                    if time.time() - self.times[nick][func] < func.rate:
+                        self.times[nick][func] = time.time()
+                        return
+        else: self.times[nick] = dict()
+        self.times[nick][func] = time.time()
+        try:
+            if hasattr(self, 'excludes'):
+                if input.sender in self.excludes:
+                    if '!' in self.excludes[input.sender]:
+                        # block all function calls for this channel
+                        return
+                    fname = func.func_code.co_filename.split('/')[-1].split('.')[0]
+                    if fname in self.excludes[input.sender]:
+                        # block function call if channel is blacklisted
+                        print 'Blocked:', input.sender, func.name, func.func_code.co_filename
+                        return
+        except Exception, e:
+            print "Error attempting to block:", str(func.name)
+            self.error(origin)
+
         try:
             func(jenni, input)
         except Exception, e:
@@ -197,6 +253,7 @@ class Jenni(irc.Bot):
     def dispatch(self, origin, args):
         bytes, event, args = args[0], args[1], args[2:]
         text = decode(bytes)
+
         for priority in ('high', 'medium', 'low'):
             items = self.commands[priority].items()
             for regexp, funcs in items:
@@ -206,8 +263,51 @@ class Jenni(irc.Bot):
                     match = regexp.match(text)
                     if match:
                         if self.limit(origin, func): continue
+
                         jenni = self.wrapped(origin, text, match)
                         input = self.input(origin, text, bytes, match, event, args)
+
+                        nick = (input.nick).lower()
+
+                        # blocking ability
+                        if os.path.isfile("blocks"):
+                            g = open("blocks", "r")
+                            contents = g.readlines()
+                            g.close()
+
+                            try: bad_masks = contents[0].split(',')
+                            except: bad_masks = ['']
+
+                            try: bad_nicks = contents[1].split(',')
+                            except: bad_nicks = ['']
+
+                            # check for blocked hostmasks
+                            if len(bad_masks) > 0:
+                                host = origin.host
+                                host = host.lower()
+                                for hostmask in bad_masks:
+                                    hostmask = hostmask.replace("\n", "").strip()
+                                    if len(hostmask) < 1: continue
+                                    try:
+                                        re_temp = re.compile(hostmask)
+                                        if re_temp.findall(host):
+                                            return
+                                    except:
+                                        if hostmask in host:
+                                            return
+                            # check for blocked nicks
+                            if len(bad_nicks) > 0:
+                                for nick in bad_nicks:
+                                    nick = nick.replace("\n", "").strip()
+                                    if len(nick) < 1: continue
+                                    try:
+                                        re_temp = re.compile(nick)
+                                        if re_temp.findall(input.nick):
+                                            return
+                                    except:
+                                        if nick in input.nick:
+                                            return
+                        # stats
                         if func.thread:
                             targs = (func, origin, jenni, input)
                             t = threading.Thread(target=self.call, args=targs)

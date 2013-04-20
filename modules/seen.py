@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-seen.py - Jenni Seen Module
-Copyright 2008, Sean B. Palmer, inamidst.com
+seen.py - jenni Seen Module
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import time
@@ -25,6 +28,7 @@ def f_seen(self, origin, match, args):
         self.msg(origin.sender, str(origin.nick) + ': ' + msg)
     else: self.msg(origin.sender, "Sorry, I haven't seen %s around." % nick)
 f_seen.rule = (['seen'], r'(\S+)')
+f_seen.rate = 45
 
 @deprecated
 def f_note(self, origin, match, args):

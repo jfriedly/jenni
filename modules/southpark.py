@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 """
-southpark.py - Jenni Southpark Module
-Copyright 2011, Michael Yanovich (myano), Kenneth Sham (Kays)
+southpark.py - jenni Southpark Module
+Copyright 2011-2013, Michael Yanovich (yanovich.net) and Kenneth Sham (Kays)
 Licensed under the Eiffel Forum License 2.
+
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 from datetime import datetime, timedelta
@@ -58,10 +62,12 @@ def southpark (jenni, input):
         if text[1] == 'cleartimes':
             cache['TIMES'] = None
             cachets['TIMES'] = None
+            jenni.reply("Southpark times successfully cleared.")
             return
         elif text[1] == 'clearnewep':
             cache['NEW-EPI'] = None
             cachets['NEW-EPI'] = None
+            jenni.reply("New episodes cleared from cache.")
         elif text[1] == 'times':
             southparktimes(jenni,input)
             return
@@ -69,6 +75,7 @@ def southpark (jenni, input):
         getNewShowDate(jenni)
 southpark.commands = ['southpark']
 southpark.priority = 'low'
+southpark.rate = 30
 
 def getNewShowDate (jenni):
     global cache, cachets
@@ -80,7 +87,7 @@ def getNewShowDate (jenni):
         return
 
     today = time.localtime()
-    src = web.get('http://en.wikipedia.org/wiki/List_of_South_Park_episodes')
+    src = web.get('https://en.wikipedia.org/wiki/List_of_South_Park_episodes')
     parts = src.split('Season 15 (2011)')
     cont = parts.pop()
     parts = cont.split('Shorts and unaired episodes')

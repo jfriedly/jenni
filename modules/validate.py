@@ -1,20 +1,24 @@
 #!/usr/bin/env python
 """
-validate.py - Jenni Validation Module
-Copyright 2008, Sean B. Palmer, inamidst.com
+validate.py - jenni Validation Module
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import web
 
 def val(jenni, input):
     """Check a webpage using the W3C Markup Validator."""
+    if not input.group(2):
+        return jenni.reply("Nothing to validate.")
     uri = input.group(2)
-    if uri:
-        if not uri.startswith('http://'):
-            uri = 'http://' + uri
+    if not uri.startswith('http://'):
+        uri = 'http://' + uri
 
     path = '/check?uri=%s;output=xml' % web.urllib.quote(uri)
     info = web.head('http://validator.w3.org' + path)

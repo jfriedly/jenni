@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 """
-wiktionary.py - Jenni Wiktionary Module
-Copyright 2009, Sean B. Palmer, inamidst.com
+wiktionary.py - jenni Wiktionary Module
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2009-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import re
 import web
 
-uri = 'http://en.wiktionary.org/w/index.php?title=%s&printable=yes'
+uri = 'https://en.wiktionary.org/w/index.php?title=%s&printable=yes'
 r_tag = re.compile(r'<[^>]+>')
 r_ul = re.compile(r'(?ims)<ul>.*?</ul>')
 
@@ -71,11 +74,15 @@ def format(word, definitions, number=2):
             result += ', '.join(n)
     return result.strip(' .,')
 
-def w(jenni, input):
+def define(jenni, input):
     word = input.group(2)
+    if not word:
+        jenni.reply("You want the definition for what?")
+        return
+    word = (word).lower()
     etymology, definitions = wiktionary(word)
     if not definitions:
-        jenni.say("Couldn't get any definitions for %s." % word)
+        jenni.say("Couldn't get any definitions for %s at Wiktionary." % word)
         return
 
     result = format(word, definitions)
@@ -87,8 +94,8 @@ def w(jenni, input):
     if len(result) > 300:
         result = result[:295] + '[...]'
     jenni.say(result)
-w.commands = ['w']
-w.example = '.w bailiwick'
+define.commands = ['dict', 'define', 'word']
+define.example = '.w bailiwick'
 
 if __name__ == '__main__':
     print __doc__.strip()

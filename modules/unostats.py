@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 """
-unostats.py -- Jenni's uno stat generator
-Copyright 2011, Michael Yanovich, yanovich.net
+unostats.py -- jenni's uno stat generator
+Copyright 2011-2013, Michael Yanovich (yanovich.net)
 Licensed under the Eiffel Forum License 2.
+
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 def rankings (ranktype):

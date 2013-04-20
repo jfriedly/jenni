@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-codepoints.py - Jenni Codepoints Module
-Copyright 2008, Sean B. Palmer, inamidst.com
+codepoints.py - jenni Codepoints Module
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import re, unicodedata
@@ -14,9 +17,7 @@ def about(u, cp=None, name=None):
     if cp is None:
         cp = ord(u)
     if name is None:
-        try: name = unicodedata.name(u)
-        except ValueError:
-            return 'U+%04X (No name found)' % cp
+        name = unicodedata.name(u, "No Name Found")
 
     if not unicodedata.combining(u):
         template = 'U+%04X %s (%s)'

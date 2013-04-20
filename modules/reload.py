@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-reload.py - Jenni Module Reloader Module
-Copyright 2008, Sean B. Palmer, inamidst.com
+reload.py - jenni Module Reloader Module
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import sys, os.path, time, imp
@@ -19,6 +22,8 @@ def f_reload(jenni, input):
         return jenni.reply('What?')
 
     if (not name) or (name == '*'):
+        jenni.variables = None
+        jenni.commands = None
         jenni.setup()
         return jenni.reply('done')
 
@@ -47,6 +52,7 @@ def f_reload(jenni, input):
 f_reload.name = 'reload'
 f_reload.rule = ('$nick', ['reload'], r'(\S+)?')
 f_reload.priority = 'low'
+f_reload.thread = False
 
 if __name__ == '__main__':
     print __doc__.strip()

@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-clock.py - Jenni Clock Module
-Copyright 2008-9, Sean B. Palmer, inamidst.com
+clock.py - jenni Clock Module
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import re, math, time, urllib, locale, socket, struct, datetime
@@ -183,8 +186,8 @@ TZ2 = {
 }
 
 TZ3 = {
-    'AEST': 10,
-    'AEDT': 11
+   'AEST': 10,
+   'AEDT': 11
 }
 
 # TimeZones.update(TZ2) # do these have to be negated?
@@ -192,6 +195,7 @@ TimeZones.update(TZ1)
 TimeZones.update(TZ3)
 
 r_local = re.compile(r'\([a-z]+_[A-Z]+\)')
+
 
 @deprecated
 def f_time(self, origin, match, args):
@@ -247,6 +251,7 @@ f_time.commands = ['t']
 f_time.name = 't'
 f_time.example = '.t UTC'
 
+
 def beats(jenni, input):
     """Shows the internet time in Swatch beats."""
     beats = ((time.time() + 3600) % 86400) / 86.4
@@ -255,8 +260,10 @@ def beats(jenni, input):
 beats.commands = ['beats']
 beats.priority = 'low'
 
+
 def divide(input, by):
     return (input / by), (input % by)
+
 
 def yi(jenni, input):
     """Shows whether it is currently yi or not."""
@@ -269,6 +276,7 @@ def yi(jenni, input):
 yi.commands = ['yi']
 yi.priority = 'low'
 
+
 def tock(jenni, input):
     """Shows the time from the USNO's atomic clock."""
     u = urllib.urlopen('http://tycho.usno.navy.mil/cgi-bin/timer.pl')
@@ -278,8 +286,10 @@ def tock(jenni, input):
 tock.commands = ['tock']
 tock.priority = 'high'
 
+
 def npl(jenni, input):
     """Shows the time from NPL's SNTP server."""
+    # for server in ('ntp1.npl.co.uk', 'ntp2.npl.co.uk'):
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.sendto('\x1b' + 47 * '\0', ('ntp1.npl.co.uk', 123))
     data, address = client.recvfrom(1024)
@@ -296,6 +306,60 @@ def npl(jenni, input):
     else: jenni.say('No data received, sorry')
 npl.commands = ['npl']
 npl.priority = 'high'
+npl.rate = 30
+
+
+def easter(jenni, input):
+    """.easter <yyyy> -- calculate the date for Easter given a year"""
+    bad_input = "Please input a valid year!"
+    text = input.group(2)
+    if not text:
+        year = datetime.datetime.now().year
+    elif text and len(text.split()) == 1:
+        year = text
+    else:
+        jenni.reply(bad_input)
+        return
+    try:
+        year = int(year)
+    except:
+        jenni.reply(bad_input)
+        return
+
+    month, day = IanTaylorEasterJscr(year)
+
+    verb = "is"
+    if year < datetime.datetime.now().year:
+        verb = "was"
+    elif year == datetime.datetime.now().year and datetime.datetime(year, month, day) <= datetime.datetime.now():
+        verb = "was"
+
+    if month == 3:
+        month = "March"
+    elif month == 4:
+        month = "April"
+    else:
+        jenni.reply("Calculation of Easter failed.")
+        return
+
+    jenni.reply("In the year %s, (Western) Easter %s: %s %s" % (year, verb, day, month))
+easter.commands = ['easter']
+
+
+def IanTaylorEasterJscr(year):
+    # https://en.wikipedia.org/wiki/Computus#Software
+    a = year % 19
+    b = year >> 2
+    c = b // 25 + 1
+    d = (c * 3) >> 2
+    e = ((a * 19) - ((c * 8 + 5) // 25) + d + 15) % 30
+    e += (29578 - a - e * 32) >> 10
+    e -= ((year % 7) + b - d + e + 2) % 7
+    d = e >> 5
+    day = e - d * 31
+    month = d + 3
+    return month, day
+
 
 if __name__ == '__main__':
     print __doc__.strip()

@@ -1,18 +1,24 @@
 #!/usr/bin/env python
 """
-twss.py - Jenni's That's What She Said Module
+twss.py - jenni's That's What She Said Module
 Copyright 2011 - Joel Friedly and Matt Meinwald
-
 Licensed under the Eiffel Forum License 2.
+
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 
 This module detects common phrases that many times can be responded with
 "That's what she said."
 
-It also allows users to add new "that's what she said" jokes to it's library 
+It also allows users to add new "that's what she said" jokes to it's library
 by following any appropriate statement with ".twss".
 """
 
-import urllib2, re, os, sys, pickle
+import urllib2
+import re
+import os
+import sys
 
 
 last = "DEBUG_ME" # if you see this in the terminal, something broke.
@@ -105,20 +111,23 @@ def say_it(jenni, input):
     total_dict_size = combine_dicts(twss, not_twss)
     if twss_prob(formatted, twss, not_twss, total_dict_size, twss_num_words, not_twss_num_words, twss_jokes, not_twss_jokes) > .9925:
         jenni.say("That's what she said.")
-    last = re.sub("[^\w\s]", "", formatted) 
-say_it.rule = r".*"
-say_it.priority = "high"
+    last = re.sub("[^\w\s]", "", formatted)
+say_it.rule = r"(.*)"
+say_it.priority = "low"
+say_it.rate = 20
 
 
-#def add_twss(jenni, input):
-#    print last
-#    with open("modules/twss_user_added.txt", "a") as f:
-#        f.write(re.sub(r"[^\w\s]", "", last.lower()) + "\n")
-#        f.close()
-#    jenni.say("That's what she said.")
-#add_twss.commands = ["twss"]
-#add_twss.priority = "low"
-
+def add_twss(jenni, input):
+    txt = input.group(2)
+    if txt:
+        with open("modules/twss_user_added.txt", "a") as f:
+            f.write(re.sub(r"[^\w\s]", "", last.lower()) + "\n")
+            f.close()
+        jenni.say("Added, new \"That's what she said.\"")
+add_twss.commands = ["twss"]
+add_twss.priority = "low"
+add_twss.threading = False
+add_twss.rate = 20
 
 if __name__ == '__main__':
     print __doc__.strip()

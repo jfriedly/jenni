@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
 oblique.py - Web Services Interface
-Copyright 2008-9, Sean B. Palmer, inamidst.com
+Copyright 2009-2013, Michael Yanovich (yanovich.net)
+Copyright 2008-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import re, urllib
@@ -43,7 +46,9 @@ def service(jenni, input, command, args):
     lines = bytes.splitlines()
     if not lines:
         return jenni.reply("Sorry, the service didn't respond any output.")
-    jenni.say(lines[0][:350])
+    try: line = lines[0].encode('utf-8')[:350]
+    except: line = lines[0][:250]
+    jenni.say(line)
 
 def refresh(jenni):
     if hasattr(jenni.config, 'services'):
@@ -81,7 +86,7 @@ def o(jenni, input):
         return jenni.reply(msg)
 
     if not o.services.has_key(command):
-        return jenni.reply('Sorry, no such service. See %s' % o.serviceURI)
+        return jenni.reply('Service not found in %s' % o.serviceURI)
 
     if hasattr(jenni.config, 'external'):
         default = jenni.config.external.get('*')
@@ -97,6 +102,7 @@ o.commands = ['o']
 o.example = '.o servicename arg1 arg2 arg3'
 o.services = {}
 o.serviceURI = None
+o.rate = 20
 
 def snippet(jenni, input):
     if not o.services:
@@ -105,13 +111,14 @@ def snippet(jenni, input):
     search = urllib.quote(input.group(2).encode('utf-8'))
     py = "BeautifulSoup.BeautifulSoup(re.sub('<.*?>|(?<= ) +', '', " + \
           "''.join(chr(ord(c)) for c in " + \
-          "eval(urllib.urlopen('http://ajax.googleapis.com/ajax/serv" + \
+          "eval(urllib.urlopen('https://ajax.googleapis.com/ajax/serv" + \
           "ices/search/web?v=1.0&q=" + search + "').read()" + \
           ".replace('null', 'None'))['responseData']['resul" + \
           "ts'][0]['content'].decode('unicode-escape')).replace(" + \
           "'&quot;', '\x22')), convertEntities=True)"
     service(jenni, input, 'py', py)
 snippet.commands = ['snippet']
+snippet.rate = 20
 
 if __name__ == '__main__':
     print __doc__.strip()

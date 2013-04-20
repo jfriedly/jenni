@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 """
-remind.py - Jenni Reminder Module
-Copyright 2011, Sean B. Palmer, inamidst.com
+remind.py - jenni Reminder Module
+Copyright 2011-2013, Michael Yanovich (yanovich.net)
+Copyright 2011-2013, Sean B. Palmer (inamidst.com)
 Licensed under the Eiffel Forum License 2.
 
-http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
 import os, re, time, threading
@@ -98,7 +101,7 @@ scaling = {
 }
 
 periods = '|'.join(scaling.keys())
-p_command = r'\.in ([0-9]+(?:\.[0-9]+)?)\s?((?:%s)\b)?:?\s?(.*)' % periods
+p_command = r'\.in (\-?[0-9]+(?:\.[0-9]+)?)\s?((?:%s)\b)?:?\s?(.*)' % periods
 r_command = re.compile(p_command)
 
 def remind(jenni, input):
@@ -131,6 +134,7 @@ def remind(jenni, input):
         jenni.reply('Okay, will remind%s' % w)
     else: jenni.reply('Okay, will remind in %s secs' % duration)
 remind.commands = ['in']
+remind.rate = 30
 
 if __name__ == '__main__':
     print __doc__.strip()

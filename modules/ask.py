@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 """
-ask.py - Ask Module
-Author: Michael Yanovich, http://yanovich.net/
+ask.py - jenni's Ask Module
+Copyright 2011-2013, Michael Yanovich (yanovich.net)
 Licensed under the Eiffel Forum License 2.
 
-Phenny (About): http://inamidst.com/phenny/
+More info:
+ * jenni: https://github.com/myano/jenni/
+ * Phenny: http://inamidst.com/phenny/
 """
 
-import random, string
+import random, time
 
-random.seed()
 
 def ask(jenni, input):
     """.ask <item1> or <item2> or <item3> - Randomly picks from a set of items seperated by ' or '."""
+
     choices = input.group(2)
+    random.seed()
+
     if choices == None:
         jenni.reply("There is no spoon! Please try a valid question.")
     elif choices.lower() == "what is the answer to life, the universe, and everything?":
@@ -21,11 +25,11 @@ def ask(jenni, input):
     else:
         list_choices = choices.split(" or ")
         if len(list_choices) == 1:
-            jenni.say(str(input.nick) + ": " + str(random.choice(('yes', 'no'))))
+            jenni.reply(random.choice(['yes', 'no']))
         else:
-            jenni.say(str(input.nick) + ": " + str(random.choice(list_choices)))
+            jenni.reply((random.choice(list_choices)).encode('utf-8'))
 ask.commands = ['ask']
-ask.priority = 'medium'
+ask.priority = 'low'
 ask.example = '.ask today or tomorrow or next week'
 
 if __name__ == '__main__':
