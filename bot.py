@@ -25,10 +25,14 @@ def decode(bytes):
 
 class Jenni(irc.Bot):
     def __init__(self, config):
-        if hasattr(config, "logchan_pm"): lc_pm = config.logchan_pm
-        else: lc_pm = None
-        if hasattr(config, "logging"): logging = config.logging
-        else: logging = False
+        if hasattr(config, "logchan_pm"):
+            lc_pm = config.logchan_pm
+        else:
+            lc_pm = None
+        if hasattr(config, "logging"):
+            logging = config.logging
+        else:
+            logging = False
         args = (config.nick, config.name, config.channels, config.password, lc_pm, logging)
         irc.Bot.__init__(self, *args)
         self.config = config
@@ -60,14 +64,17 @@ class Jenni(irc.Bot):
                         if n.endswith('.py') and not n.startswith('_'):
                             filenames.append(os.path.join(fn, n))
 
+        print filenames
         modules = []
         excluded_modules = getattr(self.config, 'exclude', [])
         for filename in filenames:
             name = os.path.basename(filename)[:-3]
-            if name in excluded_modules: continue
+            if name in excluded_modules:
+                continue
             # if name in sys.modules:
             #     del sys.modules[name]
-            try: module = imp.load_source(name, filename)
+            try:
+                module = imp.load_source(name, filename)
             except Exception, e:
                 print >> sys.stderr, "Error loading %s: %s (in bot.py)" % (name, e)
             else:
@@ -100,7 +107,8 @@ class Jenni(irc.Bot):
                 if hasattr(func, 'example'):
                     example = func.example
                     example = example.replace('$nickname', self.nick)
-                else: example = None
+                else:
+                    example = None
                 self.doc[func.name] = (func.__doc__, example)
             self.commands[priority].setdefault(regexp, []).append(func)
 

@@ -27,24 +27,29 @@ class Watcher(object):
         sys.exit()
 
     def kill(self):
-        try: os.kill(self.child, signal.SIGKILL)
-        except OSError: pass
+        try:
+            os.kill(self.child, signal.SIGKILL)
+        except OSError:
+            pass
 
 def run_jenni(config):
     if hasattr(config, 'delay'):
         delay = config.delay
-    else: delay = 20
+    else:
+        delay = 20
 
     def connect(config):
         p = bot.Jenni(config)
         p.run(config.host, config.port)
 
-    try: Watcher()
+    try:
+        Watcher()
     except Exception, e:
         print >> sys.stderr, 'Warning:', e, '(in __init__.py)'
 
     while True:
-        try: connect(config)
+        try:
+            connect(config)
         except KeyboardInterrupt:
             sys.exit()
 
@@ -59,7 +64,8 @@ def run(config):
     t = threading.Thread(target=run_jenni, args=(config,))
     if hasattr(t, 'run'):
         t.run()
-    else: t.start()
+    else:
+        t.start()
 
 if __name__ == '__main__':
     print __doc__
