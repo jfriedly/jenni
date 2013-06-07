@@ -33,7 +33,8 @@ def say_it(jenni, input):
         if time.time() - last_active > jenni.config.activity_timeout:
             cfg = SafeConfigParser()
             cfg.read(os.path.expanduser('~/.gcsms'))
-            gcsms.cmd_send(cfg, text=input)
+            txt = "[{0}] {1}: {2}".format(input.sender, input.nick, input)
+            gcsms.cmd_send(cfg, text=txt)
 say_it.rule = r'(.*)'
 say_it.priority = "high"
 say_it.rate = 20
